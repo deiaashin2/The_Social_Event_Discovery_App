@@ -1,0 +1,32 @@
+{
+  "name": "the_social_event_discovery_app",
+  "version": "1.0.0",
+  "description": "CPSC 491- Senior Capstone Project in Computer Science",
+  "homepage": "https://github.com/deiaashin2/The_Social_Event_Discovery_App#readme",
+  "bugs": {
+    "url": "https://github.com/deiaashin2/The_Social_Event_Discovery_App/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deiaashin2/The_Social_Event_Discovery_App.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "frontend/index.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "pg": "^8.18.0",
+    "redis": "^5.10.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
