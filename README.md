@@ -10,3 +10,17 @@ The web client lives in `frontend/eventconnect-web`.
 cd frontend/eventconnect-web
 npm install
 npm run dev
+
+## Tech Stack
+- Frontend: React + Vite + Tailwind
+- Backend: Node.js (planned)
+- Database: PostgreSQL (planned)
+
+## Sprint 1 Scope
+- Project setup
+- Frontend scaffold
+- Local development environment
+
+## Known Limitations
+- Backend not yet integrated
+- Mock data only
