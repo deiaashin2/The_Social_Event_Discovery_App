@@ -22,7 +22,7 @@ jobs:
           cd backend
           npm install
 
-      - name: Build project
+      - name: Run backend tests
         run: |
           cd backend
-          npm run build
+          npm test
