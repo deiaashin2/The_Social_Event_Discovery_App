@@ -21,4 +21,9 @@ app.get("/db-test", (req, res) => {
   res.json({ ok: true, time: new Date() });
 });
 
+// API Status
+app.get("/api/status", (req, res) => {
+  res.json({ message: "Backend API is running!" });
+});
+
 module.exports = app;
