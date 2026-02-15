@@ -11,10 +11,46 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock auth — navigate to home
-    navigate("/");
+    setError(null);
+    setLoading(true);
+
+    try {
+      const endpoint = mode === "signup" ? "/auth/signup" : "/auth/login";
+
+      const payload =
+        mode === "signup"
+          ? { name: form.name, email: form.email, password: form.password }
+          : { email: form.email, password: form.password };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data?.error || "Authentication failed");
+        setLoading(false);
+        return;
+      }
+
+      // If your backend returns token/user (recommended)
+      if (data.token) localStorage.setItem("token", data.token);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/");
+    } catch (err) {
+      setError("Network error. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

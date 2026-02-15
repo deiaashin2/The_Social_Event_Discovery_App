@@ -1,0 +1,59 @@
+name: Backend Integration Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: mydb
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run migrations
+        run: |
+          PGPASSWORD=mypassword psql -h localhost -U myuser -d mydb -f database/migrations/0001_init.sql
+
+      - name: Run integration tests
+        working-directory: backend
+        env:
+          PORT: 4000
+          PG_HOST: localhost
+          PG_PORT: 5432
+          PG_USER: myuser
+          PG_PASSWORD: mypassword
+          PG_DATABASE: mydb
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret
+        run: npm test
