@@ -1,14 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const bcrypt = require("bcryptjs");      // password hashing
-const jwt = require("jsonwebtoken");     // token signing
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const pool = require("../db");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
-
-// TEMP in-memory storage (swap to DB later)
-// store passwordHash, never store plain password
-let users = []; // { id, name, email, passwordHash }
 
 // Signup
 router.post("/signup", async (req, res) => {
@@ -22,35 +19,37 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
-    const existingUser = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
+    // check existing email
+    const existing = await pool.query(
+      "SELECT user_id FROM users WHERE LOWER(email) = LOWER($1)",
+      [email]
     );
-    if (existingUser) {
+    if (existing.rowCount > 0) {
       return res.status(409).json({ error: "Email already exists" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = {
-      id: users.length + 1,
-      name,
-      email,
-      passwordHash,
-    };
+    // insert user (display_name maps from form.name)
+    const created = await pool.query(
+      `INSERT INTO users (email, display_name, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING user_id, email, display_name`,
+      [email, name, passwordHash]
+    );
 
-    users.push(user);
+    const userRow = created.rows[0];
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: userRow.user_id, email: userRow.email },
       JWT_SECRET,
       { expiresIn: "2h" }
     );
 
-    // never return passwordHash
     return res.status(201).json({
       message: "User created",
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: userRow.user_id, name: userRow.display_name, email: userRow.email },
     });
   } catch (err) {
     return res.status(500).json({ error: "Server error" });
@@ -66,21 +65,26 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    const user = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
+    const result = await pool.query(
+      `SELECT user_id, email, display_name, password_hash
+       FROM users
+       WHERE LOWER(email) = LOWER($1)`,
+      [email]
     );
 
-    if (!user) {
+    if (result.rowCount === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const ok = await bcrypt.compare(password, user.passwordHash);
+    const userRow = result.rows[0];
+
+    const ok = await bcrypt.compare(password, userRow.password_hash);
     if (!ok) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: userRow.user_id, email: userRow.email },
       JWT_SECRET,
       { expiresIn: "2h" }
     );
@@ -88,14 +92,14 @@ router.post("/login", async (req, res) => {
     return res.json({
       message: "Login successful",
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: userRow.user_id, name: userRow.display_name, email: userRow.email },
     });
   } catch (err) {
     return res.status(500).json({ error: "Server error" });
   }
 });
 
-// token
+// Token check (same as before)
 router.get("/me", (req, res) => {
   const auth = req.headers.authorization || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
@@ -105,16 +109,11 @@ router.get("/me", (req, res) => {
   }
 
   try {
-    const payload = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "dev-secret-change-me"
-    );
-
+    const payload = jwt.verify(token, JWT_SECRET);
     res.json({ ok: true, payload });
   } catch {
     res.status(401).json({ error: "Invalid token" });
   }
 });
-
 
 module.exports = router;
