@@ -11,6 +11,12 @@ const authRoutes = require("./routes/auth.routes");
 // route for signup and login
 app.use("/auth", authRoutes);
 
+const eventsRoutes = require("./routes/events.routes");
+
+// route for events
+app.use("/events", eventsRoutes);
+
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
