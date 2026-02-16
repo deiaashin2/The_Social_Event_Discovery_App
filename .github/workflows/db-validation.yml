@@ -1,0 +1,14 @@
+name: DB Validation
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  db-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate schema + migrations
+        run: bash database/tests/check_schema.sh
