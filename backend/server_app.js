@@ -16,7 +16,7 @@ const eventsRoutes = require("./routes/events.routes");
 // route for events
 app.use("/events", eventsRoutes);
 
-const eventsRoutes = require("./routes/rsvp.routes");
+const rsvpRoutes = require("./routes/rsvp.routes");
 
 // route for events
 app.use("/rsvp", rsvpRoutes);
