@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM events WHERE id = $1", [id]);
+    const result = await pool.query("SELECT * FROM events WHERE event_id = $1", [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
@@ -30,11 +30,19 @@ router.get("/:id", async (req, res) => {
 
 // Create a new event
 router.post("/", async (req, res) => {
-  const { name, description, date, location } = req.body;
+  const { title, description, start_time, end_time, location_name, created_by } = req.body;
+  if (!title || !start_time) {
+    return res.status(400).json({ error: "title and start_time are required" });
+  }
   try {
     const result = await pool.query(
-      "INSERT INTO events (name, description, date, location) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, description, date, location]
+      "INSERT INTO events (title, description, start_time, end_time, location_name, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [title,
+        description || null,
+        start_time,
+        end_time || null,
+        location_name || null,
+        created_by || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -46,11 +54,11 @@ router.post("/", async (req, res) => {
 // Update an event by ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, description, date, location } = req.body;
+  const { title, description, start_time, end_time, location_name} = req.body;
   try {
     const result = await pool.query(
-      "UPDATE events SET name = $1, description = $2, date = $3, location = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *",
-      [name, description, date, location, id]
+      "UPDATE events SET title = $1, description = $2, start_time = $3, end_time = $4, location_name = $5, updated_at = NOW() WHERE event_id = $6 RETURNING *",
+      [title, description, start_time, end_time, location_name, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
@@ -66,7 +74,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query("DELETE FROM events WHERE id = $1 RETURNING *", [id]);
+    const result = await pool.query("DELETE FROM events WHERE event_id = $1 RETURNING *", [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
