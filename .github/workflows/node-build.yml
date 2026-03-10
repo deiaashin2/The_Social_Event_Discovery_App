@@ -21,10 +21,9 @@ jobs:
         run: |
           cd backend
           npm install
-          # Add 'npm run build' here if your backend has a build step
 
       - name: Build Frontend
         run: |
-          cd frontend
+          cd frontend/eventconnect-web
           npm install
           npm run build
