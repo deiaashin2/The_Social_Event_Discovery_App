@@ -15,9 +15,16 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.18.0"
+          node-version: "20.x"
 
-      - name: Install dependencies
+      - name: Build Backend
         run: |
           cd backend
           npm install
+          # Add 'npm run build' here if your backend has a build step
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
