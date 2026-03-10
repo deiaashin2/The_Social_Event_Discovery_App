@@ -35,46 +35,57 @@ router.post("/:eventId", async (req, res) => {
     return res.status(400).json({ error: "Invalid RSVP status" });
   }
 
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+
     // Check event exists + capacity
-    const eventResult = await pool.query(
-      "SELECT capacity FROM events WHERE event_id = $1",
+    const eventResult = await client.query(
+      "SELECT capacity FROM events WHERE event_id = $1 FOR SHARE",
       [eventId]
     );
 
     if (eventResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Event not found" });
     }
 
     const capacity = eventResult.rows[0].capacity; // null => unlimited
 
-    // Enforce capacity ONLY if user wants to be "going"
-    if (finalStatus === "going" && capacity !== null) {
-      // Count current "going" attendees EXCLUDING this user
-      const countResult = await pool.query(
-        `
-        SELECT COUNT(*)::INT AS going_count
-        FROM event_attendees
-        WHERE event_id = $1
-          AND status = 'going'
-          AND user_id <> $2
-        `,
-        [eventId, user_id]
-      );
+    // Check current status to see if they are already "going"
+    const currentRSVPResult = await client.query(
+      "SELECT status FROM event_attendees WHERE event_id = $1 AND user_id = $2",
+      [eventId, user_id]
+    );
+    const wasGoing = currentRSVPResult.rows.length > 0 && currentRSVPResult.rows[0].status === "going";
 
-      const goingCountExcludingUser = countResult.rows[0].going_count;
+    // Count current "going" attendees
+    const countResult = await client.query(
+      `
+      SELECT COUNT(*)::INT AS going_count
+      FROM event_attendees
+      WHERE event_id = $1
+        AND status = 'going'
+      `,
+      [eventId]
+    );
 
-      if (goingCountExcludingUser >= capacity) {
+    let currentGoingCount = countResult.rows[0].going_count;
+
+    // Enforce capacity ONLY if user wants to be "going" and isn't already "going"
+    if (finalStatus === "going" && !wasGoing && capacity !== null) {
+      if (currentGoingCount >= capacity) {
+        await client.query("ROLLBACK");
         return res.status(409).json({
           error: "Event is at full capacity",
           capacity,
-          going_count: goingCountExcludingUser,
+          going_count: currentGoingCount,
         });
       }
     }
 
     // Insert or update RSVP
-    const result = await pool.query(
+    const result = await client.query(
       `
       INSERT INTO event_attendees (event_id, user_id, status)
       VALUES ($1, $2, $3)
@@ -87,18 +98,28 @@ router.post("/:eventId", async (req, res) => {
 
     const rsvp = result.rows[0];
 
-    // Updated going count (ONLY "going")
-    const goingCount = await getGoingCount(eventId);
+    // Calculate new going count in memory
+    let newGoingCount = currentGoingCount;
+    if (finalStatus === "going" && !wasGoing) {
+      newGoingCount++;
+    } else if (finalStatus !== "going" && wasGoing) {
+      newGoingCount--;
+    }
+
+    await client.query("COMMIT");
 
     return res.status(201).json({
       message: "RSVP saved",
       rsvp,
-      attendee_count: goingCount,
+      attendee_count: newGoingCount,
       capacity,
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error creating RSVP:", err);
     return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
   }
 });
 
@@ -137,7 +158,7 @@ router.get("/:eventId/attendees", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "SELECT * FROM event_attendees WHERE event_id = $1",
+      "SELECT user_id, status, joined_at FROM event_attendees WHERE event_id = $1",
       [eventId]
     );
 
