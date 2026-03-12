@@ -21,6 +21,11 @@ const rsvpRoutes = require("./routes/rsvp.routes");
 // route for events
 app.use("/rsvp", rsvpRoutes);
 
+const attendeesRoutes = require("./routes/attendees.routes");
+
+// route for attendees
+app.use("/events", attendeesRoutes);
+
 
 // Health check
 app.get("/health", (req, res) => {
