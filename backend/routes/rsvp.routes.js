@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const authenticateToken = require("../middleware/auth");
 
 const VALID_STATUSES = ["going", "interested", "not_going"];
 
@@ -21,9 +22,10 @@ async function getGoingCount(eventId) {
 
 //RSVP to an event (create OR update)
 
-router.post("/:eventId", async (req, res) => {
+router.post("/:eventId", authenticateToken, async (req, res) => {
   const { eventId } = req.params;
-  const { user_id, status } = req.body;
+  const { status } = req.body;
+  const user_id = req.user.userId;
 
   if (!user_id) {
     return res.status(400).json({ error: "user_id is required" });
@@ -170,8 +172,13 @@ router.get("/:eventId/attendees", async (req, res) => {
 });
 
 // Delete RSVP
-router.delete("/:eventId/:userId", async (req, res) => {
+router.delete("/:eventId/:userId", authenticateToken, async (req, res) => {
   const { eventId, userId } = req.params;
+
+  // Ensure user is only deleting their own RSVP
+  if (parseInt(userId) !== req.user.userId) {
+    return res.status(403).json({ error: "Unauthorized to delete this RSVP" });
+  }
 
   try {
     const result = await pool.query(

@@ -8,23 +8,11 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     hmr: { overlay: false },
     proxy: {
-      "/auth": { target: "http://127.0.0.1:4000", changeOrigin: true },
-      "/health": { target: "http://127.0.0.1:4000", changeOrigin: true },
-      "/api": { target: "http://127.0.0.1:4000", changeOrigin: true },
-    },
-  },
-  proxy: {
-    "/auth": {
-      target: "http://localhost:4000",
-      changeOrigin: true,
-    },
-    "/health": {
-      target: "http://localhost:4000",
-      changeOrigin: true,
-    },
-    "/api": {
-      target: "http://localhost:4000",
-      changeOrigin: true,
+      "/auth": { target: "http://localhost:4000", changeOrigin: true },
+      "/events": { target: "http://localhost:4000", changeOrigin: true },
+      "/rsvp": { target: "http://localhost:4000", changeOrigin: true },
+      "/health": { target: "http://localhost:4000", changeOrigin: true },
+      "/api": { target: "http://localhost:4000", changeOrigin: true },
     },
   },
   plugins: [react()],

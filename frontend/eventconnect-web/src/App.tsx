@@ -19,25 +19,10 @@ const queryClient = new QueryClient();
 function Layout() {
   const location = useLocation();
   const hideNavbar = ["/login", "/signup"].includes(location.pathname);
-  const [apiStatus, setApiStatus] = useState("Loading API status..."); // Added state for API status
-
-  useEffect(() => {
-    // Effect to fetch API status
-    async function fetchApiStatus() {
-      try {
-        const data = await get("/api/status");
-        setApiStatus(data.message);
-      } catch (error) {
-        setApiStatus(`API Error: ${error.message}`);
-      }
-    }
-    fetchApiStatus();
-  }, []);
 
   return (
     <>
       {!hideNavbar && <Navbar />}
-      <p>API Status: {apiStatus}</p> {/* Display API status */}
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/events/:id" element={<EventDetails />} />

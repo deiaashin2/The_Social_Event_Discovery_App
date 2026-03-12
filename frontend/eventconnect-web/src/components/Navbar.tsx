@@ -1,10 +1,30 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, MessageCircle, User, Calendar, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string } | null>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse user from localStorage");
+      }
+    }
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -46,18 +66,33 @@ export default function Navbar() {
 
         {/* Auth Actions */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            to="/login"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Log in
-          </Link>
-          <Link
-            to="/signup"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Sign up
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-foreground">Hi, {user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/signup"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -93,12 +128,27 @@ export default function Navbar() {
               </Link>
             ))}
             <hr className="border-border" />
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground">
-              Log in
-            </Link>
-            <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground">
-              Sign up
-            </Link>
+            {user ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout ({user.name})
+              </button>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground">
+                  Log in
+                </Link>
+                <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground">
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
