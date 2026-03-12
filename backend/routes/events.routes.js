@@ -30,19 +30,23 @@ router.get("/:id", async (req, res) => {
 
 // Create a new event
 router.post("/", async (req, res) => {
-  const { title, description, start_time, end_time, location_name, created_by } = req.body;
+  const { 
+    title, 
+    description = null, 
+    start_time, 
+    end_time = null, 
+    location_name = null, 
+    created_by = null 
+  } = req.body;
+
   if (!title || !start_time) {
     return res.status(400).json({ error: "title and start_time are required" });
   }
+
   try {
     const result = await pool.query(
       "INSERT INTO events (title, description, start_time, end_time, location_name, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [title,
-        description || null,
-        start_time,
-        end_time || null,
-        location_name || null,
-        created_by || null]
+      [title, description, start_time, end_time, location_name, created_by]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -54,12 +58,49 @@ router.post("/", async (req, res) => {
 // Update an event by ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { title, description, start_time, end_time, location_name} = req.body;
+  const { title, description, start_time, end_time, location_name } = req.body;
+
+  if (!title || !start_time) {
+    return res.status(400).json({ error: "title and start_time are required" });
+  }
+
   try {
-    const result = await pool.query(
-      "UPDATE events SET title = $1, description = $2, start_time = $3, end_time = $4, location_name = $5, updated_at = NOW() WHERE event_id = $6 RETURNING *",
-      [title, description, start_time, end_time, location_name, id]
-    );
+    // Build dynamic query to avoid overwriting with null if fields are missing in req.body
+    const fields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      fields.push(`title = $${paramIndex++}`);
+      values.push(title);
+    }
+    if (description !== undefined) {
+      fields.push(`description = $${paramIndex++}`);
+      values.push(description);
+    }
+    if (start_time !== undefined) {
+      fields.push(`start_time = $${paramIndex++}`);
+      values.push(start_time);
+    }
+    if (end_time !== undefined) {
+      fields.push(`end_time = $${paramIndex++}`);
+      values.push(end_time);
+    }
+    if (location_name !== undefined) {
+      fields.push(`location_name = $${paramIndex++}`);
+      values.push(location_name);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(id);
+    const query = `UPDATE events SET ${fields.join(", ")} WHERE event_id = $${paramIndex} RETURNING *`;
+
+    const result = await pool.query(query, values);
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
