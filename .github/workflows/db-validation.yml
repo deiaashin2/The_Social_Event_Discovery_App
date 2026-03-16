@@ -1,0 +1,48 @@
+name: DB Validation
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  db-validation:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: mydb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U myuser -d mydb"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run migration 0001
+        env:
+          PGPASSWORD: mypassword
+        run: |
+          psql -h localhost -U myuser -d mydb -f database/migrations/0001_init.sql
+
+      - name: Verify required tables exist
+        env:
+          PGPASSWORD: mypassword
+        run: |
+          psql -h localhost -U myuser -d mydb -c "\dt"
+
+

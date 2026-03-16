@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react"; // Added useState and useEffect
 import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import EventDetails from "./pages/EventDetails";
@@ -11,6 +12,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
+import { get } from "./api"; // Import the get function
 
 const queryClient = new QueryClient();
 
