@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import EventCard from "@/components/EventCard";
-import CategoryChips from "@/components/CategoryChips";
-import SearchInput from "@/components/SearchInput";
+import EventCard from "../components/EventCard";
+import CategoryChips from "../components/CategoryChips";
+import SearchInput from "../components/SearchInput";
 import { Sparkles, TrendingUp, CalendarDays } from "lucide-react";
 
 export default function Index() {
