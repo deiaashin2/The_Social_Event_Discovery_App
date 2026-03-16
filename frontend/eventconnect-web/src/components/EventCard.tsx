@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { MapPin, Clock, Users } from "lucide-react";
 import type { Event } from "@/data/mockEvents";
+import { useRsvp } from "@/hooks/useRsvp";
+import RsvpBadge from "@/components/RsvpBadge";
+import RsvpButtons from "@/components/RsvpButtons";
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const { status, loading, setRsvp } = useRsvp(event.id);
+  const displayCount = event.rsvpCount + (status === "going" ? 1 : 0);
+
   return (
     <Link to={`/events/${event.id}`} className="group block">
       <div className="hover-lift overflow-hidden rounded-xl border border-border bg-card">
@@ -19,9 +25,12 @@ export default function EventCard({ event }: EventCardProps) {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-          <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
-            {event.category}
-          </span>
+          <div className="absolute left-3 top-3 flex items-center gap-2">
+            <span className="rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
+              {event.category}
+            </span>
+            <RsvpBadge status={status} />
+          </div>
         </div>
 
         {/* Content */}
@@ -54,12 +63,11 @@ export default function EventCard({ event }: EventCardProps) {
                 ))}
               </div>
               <span className="text-xs text-muted-foreground">
-                {event.rsvpCount} going
+                <Users className="mr-1 inline h-3 w-3" />
+                {displayCount} going
               </span>
             </div>
-            <span className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-              RSVP
-            </span>
+            <RsvpButtons status={status} loading={loading} onRsvp={setRsvp} size="sm" />
           </div>
         </div>
       </div>
