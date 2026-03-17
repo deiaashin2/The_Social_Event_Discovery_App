@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, MessageCircle, User, Calendar, LogOut } from "lucide-react";
+import { Search, MessageCircle, User, Calendar } from "lucide-react";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -11,6 +11,7 @@ export default function Navbar() {
   const navItems = [
     { path: "/", label: "Discover", icon: Search },
     { path: "/chat", label: "Chat", icon: MessageCircle },
+    { path: "/profile", label: "Profile", icon: User },
   ];
 
   return (

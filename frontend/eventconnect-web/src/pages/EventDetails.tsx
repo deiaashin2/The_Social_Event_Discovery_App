@@ -1,12 +1,15 @@
 import { useParams, Link } from "react-router-dom";
 import { mockEvents } from "@/data/mockEvents";
 import { MapPin, Clock, Users, ArrowLeft, Share2, Heart } from "lucide-react";
-import { useState } from "react";
+import { useRsvp } from "@/hooks/useRsvp";
+import RsvpButtons from "@/components/RsvpButtons";
+import RsvpBadge from "@/components/RsvpBadge";
+import { toast } from "@/hooks/use-toast";
 
 export default function EventDetails() {
   const { id } = useParams();
   const event = mockEvents.find((e) => e.id === id);
-  const [rsvped, setRsvped] = useState(false);
+  const { status, loading, setRsvp } = useRsvp(id || "");
 
   if (!event) {
     return (
@@ -15,6 +18,17 @@ export default function EventDetails() {
       </div>
     );
   }
+
+  const displayCount = event.rsvpCount + (status === "going" ? 1 : 0);
+
+  const handleRsvp = async (newStatus: "going" | "interested" | "not_going") => {
+    const result = await setRsvp(newStatus);
+    const labels = { going: "Going", interested: "Interested", not_going: "Not Going", none: "" };
+    toast({
+      title: result === "none" ? "RSVP removed" : `You're ${labels[result]}!`,
+      description: result === "none" ? "Your RSVP has been cleared." : `Your status for ${event.title} has been updated.`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,9 +56,12 @@ export default function EventDetails() {
 
       {/* Content */}
       <div className="container -mt-16 relative z-10 pb-12">
-        <span className="mb-3 inline-block rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground">
-          {event.category}
-        </span>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground">
+            {event.category}
+          </span>
+          <RsvpBadge status={status} />
+        </div>
         <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">{event.title}</h1>
 
         <div className="mb-6 flex flex-wrap gap-4">
@@ -58,8 +75,21 @@ export default function EventDetails() {
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-card px-4 py-2.5 text-sm text-foreground">
             <Users className="h-4 w-4 text-primary" />
-            {event.rsvpCount} / {event.capacity}
+            {displayCount} / {event.capacity}
           </div>
+        </div>
+
+        {/* RSVP Section */}
+        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">Your RSVP</h2>
+          <RsvpButtons status={status} loading={loading} onRsvp={handleRsvp} />
+          {status !== "none" && (
+            <p className="mt-3 text-xs text-muted-foreground animate-fade-in">
+              {status === "going" && "🎉 You're on the list! See you there."}
+              {status === "interested" && "⭐ We'll keep you updated on this event."}
+              {status === "not_going" && "No worries — check out other events!"}
+            </p>
+          )}
         </div>
 
         {/* Host */}
@@ -94,18 +124,6 @@ export default function EventDetails() {
             ))}
           </div>
         </div>
-
-        {/* RSVP Button */}
-        <button
-          onClick={() => setRsvped(!rsvped)}
-          className={`w-full rounded-xl py-4 text-base font-semibold transition-all ${
-            rsvped
-              ? "bg-success/20 text-success border border-success/30"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
-          }`}
-        >
-          {rsvped ? "✓ You're going!" : "RSVP — I'm in!"}
-        </button>
       </div>
     </div>
   );
