@@ -11,7 +11,7 @@ import Attendees from "./pages/Attendees";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
-import Profile from "./pages/Profile";
+import Profile from "./pages/Profile.tsx";
 import NotFound from "./pages/NotFound";
 import { get } from "./api"; // Import the get function
 
