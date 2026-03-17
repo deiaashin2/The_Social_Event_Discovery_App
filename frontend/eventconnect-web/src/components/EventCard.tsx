@@ -19,22 +19,31 @@ export default function EventCard({ event }: EventCardProps) {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-          <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
-            {event.category}
-          </span>
+          <div className="absolute left-3 top-3">
+            <span className="rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
+              {event.category}
+            </span>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="mb-2 text-lg font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+          <h3 className="mb-2 line-clamp-1 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
             {event.title}
           </h3>
 
           <div className="mb-3 flex flex-col gap-1.5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-3.5 w-3.5 shrink-0" />
-              <span>{new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {event.time}</span>
+              <span>
+                {new Date(event.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                · {event.time}
+              </span>
             </div>
+
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
               <span className="line-clamp-1">{event.location}</span>
@@ -53,10 +62,13 @@ export default function EventCard({ event }: EventCardProps) {
                   />
                 ))}
               </div>
+
               <span className="text-xs text-muted-foreground">
+                <Users className="mr-1 inline h-3 w-3" />
                 {event.rsvpCount} going
               </span>
             </div>
+
             <span className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               RSVP
             </span>
