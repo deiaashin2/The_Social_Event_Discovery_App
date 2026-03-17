@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Users, ArrowLeft, Share2, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
+import RSVPButton from "@/components/RSVPButton";
 
 export default function EventDetails() {
   const { id } = useParams();
