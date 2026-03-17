@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   user_id        BIGSERIAL PRIMARY KEY,
   email          VARCHAR(255) UNIQUE NOT NULL,
   display_name   VARCHAR(100) NOT NULL,
+  password_hash  TEXT NOT NULL,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -16,7 +17,9 @@ CREATE TABLE IF NOT EXISTS events (
   start_time     TIMESTAMP NOT NULL,
   end_time       TIMESTAMP,
   created_by     BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
-  created_at     TIMESTAMP NOT NULL DEFAULT NOW()
+  created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+  capacity       INTEGER CHECK (capacity > 0)
 );
 
 CREATE TABLE IF NOT EXISTS event_attendees (

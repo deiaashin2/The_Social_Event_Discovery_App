@@ -6,8 +6,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    hmr: {
-      overlay: false,
+    hmr: { overlay: false },
+    proxy: {
+      "/auth": { target: "http://localhost:4000", changeOrigin: true },
+      "/events": { target: "http://localhost:4000", changeOrigin: true },
+      "/rsvp": { target: "http://localhost:4000", changeOrigin: true },
+      "/health": { target: "http://localhost:4000", changeOrigin: true },
+      "/api": { target: "http://localhost:4000", changeOrigin: true },
     },
   },
   plugins: [react()],

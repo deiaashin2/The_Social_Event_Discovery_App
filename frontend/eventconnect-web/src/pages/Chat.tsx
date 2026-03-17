@@ -1,11 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; //Update: Added useEffect for socket connection
 import { mockConversations, mockMessages, type ChatMessage } from "@/data/mockEvents";
 import { Send, ArrowLeft, MessageCircle } from "lucide-react";
+import { getSocket, sendMessageWithRetry } from "@/services/socket"; // Import socket functions
 
 export default function Chat() {
   const [activeConvo, setActiveConvo] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(mockMessages);
   const [input, setInput] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState("Connecting...");
+
+useEffect(() => {
+  const socket = getSocket();
+
+  // Immediately check if already connected
+  if (socket.connected) {
+    setConnectionStatus("Connected");
+  }
+
+  socket.on("connect", () => {
+    setConnectionStatus("Connected");
+  });
+
+  socket.on("disconnect", () => {
+    setConnectionStatus("Disconnected");
+  });
+
+  socket.on("chat_message", (data) => {
+    if (!activeConvo) return;
+
+    const newMsg: ChatMessage = {
+      id: `m-${Date.now()}`,
+      senderId: "other",
+      text: data.message,
+      timestamp: "Just now",
+      isOwn: false,
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [activeConvo]: [...(prev[activeConvo] || []), newMsg],
+    }));
+  });
+
+  return () => {
+    socket.off("connect");
+    socket.off("disconnect");
+    socket.off("chat_message");
+  };
+}, []);
 
   const activeConversation = mockConversations.find((c) => c.id === activeConvo);
 
@@ -22,6 +64,11 @@ export default function Chat() {
       ...prev,
       [activeConvo]: [...(prev[activeConvo] || []), newMsg],
     }));
+    
+    sendMessageWithRetry({
+      roomId: activeConvo,
+      message: input,
+});
     setInput("");
   };
 
@@ -69,7 +116,14 @@ export default function Chat() {
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <img src={activeConversation.avatar} alt={activeConversation.name} className="h-9 w-9 rounded-full object-cover" />
-              <span className="font-medium text-foreground">{activeConversation.name}</span>
+              <div className="flex flex-col">
+              <span className="font-medium text-foreground">
+                {activeConversation.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Status: {connectionStatus}
+              </span>
+            </div>
             </div>
 
             {/* Messages */}
