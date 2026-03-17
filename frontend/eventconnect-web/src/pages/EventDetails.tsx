@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Users, ArrowLeft, Share2, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
+import RSVPButton from "@/components/RSVPButton";
 
 export default function EventDetails() {
   const { id } = useParams();
@@ -42,35 +43,9 @@ export default function EventDetails() {
     fetchEventAndStatus();
   }, [id]);
 
-  const handleRSVP = async () => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (!token || !userData) {
-      navigate("/login");
-      return;
-    }
-
-    const user = JSON.parse(userData);
-
-    try {
-      const res = await fetch(`/rsvp/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ user_id: user.id, status: rsvped ? "not_going" : "going" })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setRsvped(!rsvped);
-        setAttendeeCount(data.attendee_count);
-      }
-    } catch (err) {
-      console.error("RSVP failed:", err);
-    }
+  const handleStatusChange = (newStatus: boolean, newCount: number) => {
+    setRsvped(newStatus);
+    setAttendeeCount(newCount);
   };
 
   if (loading) {
@@ -155,16 +130,11 @@ export default function EventDetails() {
         </div>
 
         {/* RSVP Button */}
-        <button
-          onClick={handleRSVP}
-          className={`w-full rounded-xl py-4 text-base font-semibold transition-all ${
-            rsvped
-              ? "bg-success/20 text-success border border-success/30"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
-          }`}
-        >
-          {rsvped ? "✓ You're going!" : "RSVP — I'm in!"}
-        </button>
+        <RSVPButton 
+          eventId={id!} 
+          initialRsvped={rsvped} 
+          onStatusChange={handleStatusChange} 
+        />
       </div>
     </div>
   );
