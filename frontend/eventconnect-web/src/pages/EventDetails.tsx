@@ -9,6 +9,11 @@ export default function EventDetails() {
   const [rsvped, setRsvped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [attendeeCount, setAttendeeCount] = useState(0);
+  const [isSubmittingRsvp, setIsSubmittingRsvp] = useState(false);
+  const [rsvpFeedback, setRsvpFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     async function fetchEventAndStatus() {
@@ -28,9 +33,7 @@ export default function EventDetails() {
           });
           if (statusRes.ok) {
             const statusData = await statusRes.json();
-            if (statusData.status === "going") {
-              setRsvped(true);
-            }
+            setRsvped(statusData.status === "going");
           }
         }
       } catch (err) {
@@ -53,8 +56,12 @@ export default function EventDetails() {
     }
 
     const user = JSON.parse(userData);
+    const nextStatus = rsvped ? "not_going" : "going";
 
     try {
+      setIsSubmittingRsvp(true);
+      setRsvpFeedback(null);
+
       const res = await fetch(`/rsvp/${id}`, {
         method: "POST",
         headers: {
@@ -63,17 +70,32 @@ export default function EventDetails() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          status: rsvped ? "not_going" : "going",
+          status: nextStatus,
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setRsvped(!rsvped);
-        setAttendeeCount(data.attendee_count);
+      if (!res.ok) {
+        throw new Error("Failed to update RSVP");
       }
+
+      const data = await res.json();
+      setRsvped(nextStatus === "going");
+      setAttendeeCount(data.attendee_count);
+      setRsvpFeedback({
+        type: "success",
+        message:
+          nextStatus === "going"
+            ? "RSVP updated. You're now marked as Going."
+            : "RSVP updated. You're no longer marked as Going.",
+      });
     } catch (err) {
       console.error("RSVP failed:", err);
+      setRsvpFeedback({
+        type: "error",
+        message: "Failed to update RSVP. Please try again.",
+      });
+    } finally {
+      setIsSubmittingRsvp(false);
     }
   };
 
@@ -170,6 +192,26 @@ export default function EventDetails() {
           </div>
         </div>
 
+        <div className="mb-6 rounded-xl border border-border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-foreground">
+              Your RSVP status
+            </h2>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                rsvped
+                  ? "border border-success/30 bg-success/20 text-success"
+                  : "border border-border bg-secondary text-muted-foreground"
+              }`}
+            >
+              {rsvped ? "Going" : "Not Going"}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            After updating your RSVP, the attendee count and your current status will refresh automatically.
+          </p>
+        </div>
+
         <div className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-foreground">
             About this event
@@ -179,15 +221,32 @@ export default function EventDetails() {
           </p>
         </div>
 
+        {rsvpFeedback && (
+          <div
+            className={`mb-4 rounded-xl border px-4 py-3 text-sm font-medium ${
+              rsvpFeedback.type === "success"
+                ? "border-success/30 bg-success/10 text-success"
+                : "border-destructive/30 bg-destructive/10 text-destructive"
+            }`}
+          >
+            {rsvpFeedback.message}
+          </div>
+        )}
+
         <button
           onClick={handleRSVP}
+          disabled={isSubmittingRsvp}
           className={`w-full rounded-xl py-4 text-base font-semibold transition-all ${
             rsvped
               ? "border border-success/30 bg-success/20 text-success"
               : "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
-          }`}
+          } ${isSubmittingRsvp ? "cursor-not-allowed opacity-70" : ""}`}
         >
-          {rsvped ? "✓ You're going!" : "RSVP — I'm in!"}
+          {isSubmittingRsvp
+            ? "Updating RSVP..."
+            : rsvped
+            ? "✓ You're going!"
+            : "RSVP — I'm in!"}
         </button>
       </div>
     </div>
