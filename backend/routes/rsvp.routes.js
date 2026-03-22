@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const authenticateToken = require("../middleware/auth");
+const { shouldNotify } = require("../services/notificationService"); // For future notification logic
 
 const VALID_STATUSES = ["going", "interested", "not_going"];
 
@@ -22,10 +23,11 @@ async function getGoingCount(eventId) {
 
 //RSVP to an event (create OR update)
 
-router.post("/:eventId", authenticateToken, async (req, res) => {
+router.post("/:eventId", async (req, res) => {
+  console.log("RSVP route hit for event:", req.params.eventId);
   const { eventId } = req.params;
   const { status } = req.body;
-  const user_id = req.user.userId;
+  const user_id = req.body.user_id; 
 
   if (!user_id) {
     return res.status(400).json({ error: "user_id is required" });
@@ -109,7 +111,29 @@ router.post("/:eventId", authenticateToken, async (req, res) => {
     }
 
     await client.query("COMMIT");
+    console.log("Notification triggered for event:", eventId);
+// Example inside RSVP route
 
+  try {
+  const io = req.app.get("io");
+
+  // TEMP: use same user for demo (replace later with real event owner)
+  const eventOwnerId = user_id;
+
+  const allowed = await shouldNotify(eventOwnerId, "RSVP");
+
+  if (allowed && io) {
+    io.emit("notification", {
+      type: "RSVP",
+      title: "New RSVP",
+      body: `A user joined event ${eventId}`,
+      target: eventId,
+    });
+  }
+} catch (err) {
+  console.error("Notification error:", err);
+}
+  
     return res.status(201).json({
       message: "RSVP saved",
       rsvp,
