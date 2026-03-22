@@ -40,6 +40,11 @@ const attendeesRoutes = require("./routes/attendees.routes");
 // route for attendees
 app.use("/events", attendeesRoutes);
 
+const ticketmasterRoutes = require("./routes/ticketmaster.routes");
+
+// route for ticketmaster
+app.use("/ticketmaster-events", ticketmasterRoutes);
+
 
 // Health check
 app.get("/health", (req, res) => {

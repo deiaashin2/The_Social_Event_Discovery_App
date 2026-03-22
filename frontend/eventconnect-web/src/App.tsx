@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useParams, Link, useNavigate, Routes, Route, Navigate } from "react-router-dom";
 import { MapPin, Clock, Users, ArrowLeft, Share2, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -136,33 +137,41 @@ useEffect(() => {
     hour: "2-digit",
     minute: "2-digit",
   });
+=======
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Index from "./pages/Index";
+import EventDetails from "./pages/EventDetails";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
+import Chat from "./pages/Chat";
+import Navbar from "./components/Navbar";
 
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const user = localStorage.getItem("user");
+  return user ? children : <Navigate to="/login" replace />;
+}
+>>>>>>> 7fca2704d8192ec118cb04ca80862f047047dd32
+
+export default function App() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative h-64 md:h-96">
-        <img
-          src={eventImage}
-          alt={event.title}
-          className="h-full w-full object-cover"
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute left-4 top-4 flex gap-2">
-          <Link
-            to="/"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur-sm transition-colors hover:bg-background"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </div>
-        <div className="absolute right-4 top-4 flex gap-2">
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur-sm transition-colors hover:bg-background">
-            <Share2 className="h-5 w-5" />
-          </button>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur-sm transition-colors hover:bg-background hover:text-primary">
-            <Heart className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
+
 
       <div className="container relative z-10 -mt-16 pb-12">
         <span className="mb-3 inline-block rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground">
@@ -223,6 +232,18 @@ useEffect(() => {
         </button>
       </div>
     </div>
+
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+
   );
 }
 

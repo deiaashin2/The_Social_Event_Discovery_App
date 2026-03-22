@@ -13,7 +13,7 @@ export default function Index() {
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const res = await fetch("/events");
+        const res = await fetch("http://localhost:4000/ticketmaster-events");
         if (res.ok) {
           const data = await res.json();
           setEvents(data);
