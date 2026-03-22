@@ -1,8 +1,9 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Routes, Route, Navigate } from "react-router-dom";
 import { MapPin, Clock, Users, ArrowLeft, Share2, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 
-export default function EventDetails() {
+function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
@@ -10,10 +11,33 @@ export default function EventDetails() {
   const [loading, setLoading] = useState(true);
   const [attendeeCount, setAttendeeCount] = useState(0);
 
-  useEffect(() => {
+useEffect(() => {
+  const socket = io("http://localhost:4000", {
+    transports: ["websocket"],
+  });
+
+  socket.on("connect", () => {
+    console.log("Connected to socket:", socket.id);
+  });
+
+  socket.on("notification", (data) => {
+    console.log("NOTIFICATION RECEIVED:", data);
+
+    // Fix: Use setTimeout to ensure alert runs after current execution context
+    setTimeout(() => {
+      alert(`${data.title}: ${data.body}`);
+    }, 100);
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+useEffect(() => {
     async function fetchEventAndStatus() {
       try {
-        const res = await fetch(`/events/${id}`);
+        if (!id) return;
+        const res = await fetch(`http://localhost:4000/events/${id}`);
         if (!res.ok) throw new Error("Event not found");
         const eventData = await res.json();
         setEvent(eventData);
@@ -21,11 +45,17 @@ export default function EventDetails() {
 
         const token = localStorage.getItem("token");
         const userData = localStorage.getItem("user");
+
         if (token && userData) {
           const user = JSON.parse(userData);
-          const statusRes = await fetch(`/rsvp/${id}/status/${user.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+
+          const statusRes = await fetch(
+            `http://localhost:4000/rsvp/${id}/status/${user.id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
           if (statusRes.ok) {
             const statusData = await statusRes.json();
             if (statusData.status === "going") {
@@ -44,18 +74,19 @@ export default function EventDetails() {
   }, [id]);
 
   const handleRSVP = async () => {
+    console.log("Sending RSVP request...");
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      navigate("/login");
+      alert("Please log in first");
       return;
     }
 
     const user = JSON.parse(userData);
 
     try {
-      const res = await fetch(`/rsvp/${id}`, {
+      const res = await fetch(`http://localhost:4000/rsvp/${id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,6 +211,7 @@ export default function EventDetails() {
         </div>
 
         <button
+          type="button"
           onClick={handleRSVP}
           className={`w-full rounded-xl py-4 text-base font-semibold transition-all ${
             rsvped
@@ -191,5 +223,20 @@ export default function EventDetails() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Redirect root to a valid event */}
+      <Route path="/" element={<Navigate to="/event/1" />} />
+
+      {/* Event page with ID */}
+     <Route path="/event/:id" element={<EventDetails />} />
+
+      {/* Fallback */}
+      <Route path="*" element={<div>Page not found</div>} />
+    </Routes>
   );
 }
