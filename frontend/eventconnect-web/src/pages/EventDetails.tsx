@@ -19,9 +19,9 @@ export default function EventDetails() {
   useEffect(() => {
     async function fetchEventAndStatus() {
       try {
-        const res = await fetch(`/events/${id}`);
-        if (!res.ok) throw new Error("Event not found");
-        const eventData = await res.json();
+        const eventRes = await fetch(`http://localhost:4000/ticketmaster-events/${id}`);
+        if (!eventRes.ok) throw new Error("Event not found");
+        const eventData = await eventRes.json();
         setEvent(eventData);
         setAttendeeCount(eventData.rsvp_count || 0);
 
