@@ -1,4 +1,5 @@
 # The_Social_Event_Discovery_App
+
 CPSC 491- Senior Capstone Project in Computer Science
 
 ## Frontend (Web)
@@ -6,6 +7,7 @@ CPSC 491- Senior Capstone Project in Computer Science
 The web client lives in `frontend/eventconnect-web`.
 
 ### Run locally
+
 ```bash
 cd frontend/eventconnect-web
 npm install
@@ -27,8 +29,10 @@ npm run dev
 ```
 
 ## Backend
+
 ### Team Setup Guide (Backend)
-```bash
+
+````bash
 
 
 Follow these steps to run the backend locally.
@@ -108,3 +112,14 @@ note - Make sure these values match your docker-compose.yml configuration.
 
 ## Running Backend Tests
 - npm test
+
+## Secret Keys & APIs (Fill these in!)
+TICKETMASTER_API_KEY=ask_the_team_for_the_current_key
+GOOGLE_CLIENT_ID=ask_peter_for_client_id
+GOOGLE_CLIENT_SECRET=ask_peter_for_secret
+GOOGLE_CALLBACK_URL=http://localhost:4000/auth/google/callback
+JWT_SECRET=ask_peter_for_the_local_secret_or_make_one_up
+SESSION_SECRET=ask_peter_for_the_local_secret_or_make_one_up
+
+note - If you run your backend on a port other than 4000, Google login will fail due to an origin mismatch.
+````
