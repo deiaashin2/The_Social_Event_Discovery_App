@@ -99,8 +99,7 @@ export default function EventDetails() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-      user_id: 1,   
+      body: JSON.stringify({  
       status: nextStatus,
     }),
   });
