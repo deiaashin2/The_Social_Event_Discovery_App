@@ -58,11 +58,12 @@ jobs:
           JWT_SECRET: test-secret
         run: npm test
 
-deploy:
-  needs: integration-tests
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  runs-on: ubuntu-latest
-  steps:
-    - name: Deploy to Production
-      run: |
-        echo "All tests passed. Initiating deployment sequence..."
+  deploy:  
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo "All tests passed. Initiating deployment sequence..."

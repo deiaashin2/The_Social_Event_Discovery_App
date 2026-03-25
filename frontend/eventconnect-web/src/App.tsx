@@ -14,14 +14,20 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <Navbar />
+
       <Routes>
+        {/* Home */}
         <Route path="/" element={<Index />} />
-        <Route path="/events/:id" element={<EventDetails />} />
+
+        {/* Event Details */}
+        <Route path="/event/:id" element={<EventDetails />} />
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
+        {/* Protected Routes */}
         <Route
           path="/profile"
           element={
@@ -39,7 +45,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Fallback */}
+        <Route path="*" element={<div>Page not found</div>} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
