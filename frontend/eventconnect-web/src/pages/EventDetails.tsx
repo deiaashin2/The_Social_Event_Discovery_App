@@ -95,16 +95,15 @@ export default function EventDetails() {
       setRsvpFeedback(null);
 
       const res = await fetch(`http://localhost:4000/rsvp/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          status: nextStatus,
-        }),
-      });
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+      user_id: 1,   
+      status: nextStatus,
+    }),
+  });
 
       if (!res.ok) throw new Error("Failed to update RSVP");
 

@@ -1,11 +1,12 @@
 const pool = require("../config/db");
+const { shouldNotify } = require("../services/notificationService"); 
 
 const VALID_STATUSES = ["going", "interested", "not_going"];
 
 exports.rsvpToEvent = async (req, res) => {
   const { eventId } = req.params;
   const { status } = req.body;
-  const user_id = req.user.userId;
+  const user_id = req.user?.userId || req.body.user_id;
 
   if (!user_id) {
     return res.status(400).json({ error: "user_id is required" });
@@ -37,7 +38,9 @@ exports.rsvpToEvent = async (req, res) => {
       "SELECT status FROM event_attendees WHERE event_id = $1 AND user_id = $2",
       [eventId, user_id]
     );
-    const wasGoing = currentRSVPResult.rows.length > 0 && currentRSVPResult.rows[0].status === "going";
+    const wasGoing =
+      currentRSVPResult.rows.length > 0 &&
+      currentRSVPResult.rows[0].status === "going";
 
     const countResult = await client.query(
       `
@@ -84,12 +87,30 @@ exports.rsvpToEvent = async (req, res) => {
 
     await client.query("COMMIT");
 
+    // Notification logic 
+console.log("Notification triggered for event:", eventId);  
+
+try {
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("notification", {
+      type: "RSVP",
+      title: "New RSVP",
+      body: `A user joined event ${eventId}`,
+      target: eventId,
+    });
+  }
+} catch (err) {
+  console.error("Notification error:", err);
+}
+
     return res.status(201).json({
       message: "RSVP saved",
       rsvp,
       attendee_count: newGoingCount,
       capacity,
     });
+
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error creating RSVP:", err);

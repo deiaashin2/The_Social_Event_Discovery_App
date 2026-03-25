@@ -8,13 +8,15 @@ const pool = new Pool({
   database: process.env.PG_DATABASE,
 });
 
-pool.connect()
-  .then(client => {
-    console.log("Connected to PostgreSQL");
-    client.release();
-  })
-  .catch(err => {
-    console.error("PostgreSQL connection error:", err.message);
-  });
+if (process.env.NODE_ENV !== "test") {
+  pool.connect()
+    .then(client => {
+      console.log("Connected to PostgreSQL");
+      client.release();
+    })
+    .catch(err => {
+      console.error("PostgreSQL connection error:", err.message);
+    });
+}
 
 module.exports = pool;
