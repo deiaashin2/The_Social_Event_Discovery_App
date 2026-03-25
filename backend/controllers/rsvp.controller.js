@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../db");
 const { shouldNotify } = require("../services/notificationService"); 
 
 const VALID_STATUSES = ["going", "interested", "not_going"];
