@@ -18,19 +18,105 @@ exports.getAllEvents = async (req, res) => {
 
 exports.getEventById = async (req, res) => {
   const { id } = req.params;
+
   try {
-    const result = await pool.query(`
-      SELECT e.*, COUNT(ea.user_id)::INT AS rsvp_count
-      FROM events e
-      LEFT JOIN event_attendees ea ON e.event_id = ea.event_id AND ea.status = 'going'
-      WHERE e.event_id = $1
-      GROUP BY e.event_id
-    `, [id]);
-    
-    if (result.rows.length === 0) {
+    let resolvedEventId;
+    let result;
+
+    if (/^\d+$/.test(id)) {
+      resolvedEventId = Number(id);
+
+      result = await pool.query(`
+        SELECT e.*, COUNT(ea.user_id)::INT AS rsvp_count
+        FROM events e
+        LEFT JOIN event_attendees ea 
+          ON e.event_id = ea.event_id 
+          AND ea.status = 'going'
+        WHERE e.event_id = $1
+        GROUP BY e.event_id
+      `, [resolvedEventId]);
+
+    } else {
+      // Try existing Ticketmaster record
+      const existing = await pool.query(
+        "SELECT event_id FROM events WHERE ticketmaster_id = $1",
+        [id]
+      );
+
+      if (existing.rows.length > 0) {
+        resolvedEventId = existing.rows[0].event_id;
+
+        result = await pool.query(`
+          SELECT e.*, COUNT(ea.user_id)::INT AS rsvp_count
+          FROM events e
+          LEFT JOIN event_attendees ea 
+            ON e.event_id = ea.event_id 
+            AND ea.status = 'going'
+          WHERE e.event_id = $1
+          GROUP BY e.event_id
+        `, [resolvedEventId]);
+
+      } else {
+        // Fetch from Ticketmaster and insert immediately
+
+        const fetch = require("node-fetch");
+
+        const tmRes = await fetch(
+          `https://app.ticketmaster.com/discovery/v2/events/${id}.json?apikey=${process.env.TICKETMASTER_API_KEY}`
+        );
+
+        if (!tmRes.ok) {
+          return res.status(404).json({ error: "Ticketmaster event not found" });
+        }
+
+        const tmData = await tmRes.json();
+
+        const title = tmData.name;
+
+        let start_time = null;
+
+        if (tmData.dates?.start?.dateTime) {
+          start_time = new Date(
+            tmData.dates.start.dateTime
+          ).toISOString();
+        } else if (tmData.dates?.start?.localDate) {
+          start_time = new Date(
+            tmData.dates.start.localDate
+          ).toISOString();
+        }
+
+        const location_name =
+        tmData._embedded?.venues?.[0]?.name || null;
+
+        const insert = await pool.query(
+          `
+          INSERT INTO events (title, start_time, location_name, ticketmaster_id)
+          VALUES ($1, $2, $3, $4)
+          RETURNING event_id
+          `,
+          [title, start_time, location_name, id]
+        );
+
+        resolvedEventId = insert.rows[0].event_id;
+
+        result = await pool.query(`
+          SELECT e.*, COUNT(ea.user_id)::INT AS rsvp_count
+          FROM events e
+          LEFT JOIN event_attendees ea 
+            ON e.event_id = ea.event_id 
+            AND ea.status = 'going'
+          WHERE e.event_id = $1
+          GROUP BY e.event_id
+        `, [resolvedEventId]);
+      }
+    }
+
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Event not found" });
     }
+
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(`Error fetching event with ID ${id}:`, err);
     res.status(500).json({ error: "Internal server error" });
