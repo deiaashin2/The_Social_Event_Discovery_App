@@ -5,6 +5,9 @@ const VALID_STATUSES = ["going", "interested", "not_going"];
 
 exports.rsvpToEvent = async (req, res) => {
   const { eventId } = req.params;
+  if (isNaN(parseInt(eventId, 10))) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
   const { status } = req.body;
 
   let user_id;
@@ -181,6 +184,9 @@ exports.rsvpToEvent = async (req, res) => {
 
 exports.getRSVPStatus = async (req, res) => {
   const { eventId, userId } = req.params;
+  if (isNaN(parseInt(eventId, 10)) || isNaN(parseInt(userId, 10))) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
 
   try {
     let resolvedEventId;
@@ -228,6 +234,9 @@ exports.getRSVPStatus = async (req, res) => {
 
 exports.getAttendees = async (req, res) => {
   const { eventId } = req.params;
+  if (isNaN(parseInt(eventId, 10))) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
 
   try {
     const result = await pool.query(
@@ -244,6 +253,9 @@ exports.getAttendees = async (req, res) => {
 
 exports.deleteRSVP = async (req, res) => {
   const { eventId, userId } = req.params;
+  if (isNaN(parseInt(eventId, 10)) || isNaN(parseInt(userId, 10))) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
 
   if (parseInt(userId) !== req.user.userId) {
     return res.status(403).json({ error: "Unauthorized to delete this RSVP" });

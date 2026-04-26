@@ -13,12 +13,39 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
     container_name: tseda-redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: node:20
+    container_name: tseda-backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    command: npm run dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   pgdata:
