@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
  */
 const authenticateToken = (req, res, next) => {
 
-  // Allow tests to bypass real JWT verification
+  //Allow tests to bypass real JWT verification
   if (process.env.NODE_ENV === "test") {
     req.user = { userId: 1 };
     return next();
