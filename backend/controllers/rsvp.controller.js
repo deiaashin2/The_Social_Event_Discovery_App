@@ -1,13 +1,10 @@
-const pool = require("../db");
+const pool = require("../config/db");
 const { shouldNotify } = require("../services/notificationService");
 
 const VALID_STATUSES = ["going", "interested", "not_going"];
 
 exports.rsvpToEvent = async (req, res) => {
   const { eventId } = req.params;
-  if (isNaN(parseInt(eventId, 10))) {
-    return res.status(400).json({ error: "Invalid ID" });
-  }
   const { status } = req.body;
 
   let user_id;
@@ -34,7 +31,7 @@ exports.rsvpToEvent = async (req, res) => {
     let resolvedEventId;
     let eventResult;
 
-    // ✅ 1️⃣ If numeric → normal DB event
+    //If numeric → normal DB event
     if (/^\d+$/.test(eventId)) {
       resolvedEventId = Number(eventId);
 
@@ -44,7 +41,7 @@ exports.rsvpToEvent = async (req, res) => {
       );
 
     } else {
-      // ✅ 2️⃣ Ticketmaster ID
+      //Ticketmaster ID
 
       const existingEvent = await client.query(
         "SELECT event_id, capacity FROM events WHERE ticketmaster_id = $1 FOR SHARE",
@@ -97,7 +94,7 @@ exports.rsvpToEvent = async (req, res) => {
 
     const capacity = eventResult.rows[0].capacity;
 
-    // ✅ 3️⃣ Use resolvedEventId everywhere below
+    // Use resolvedEventId everywhere below
 
     const currentRSVPResult = await client.query(
       "SELECT status FROM event_attendees WHERE event_id = $1 AND user_id = $2",
@@ -153,7 +150,7 @@ exports.rsvpToEvent = async (req, res) => {
 
     await client.query("COMMIT");
 
-    // ✅ Notification
+    // Notification
     console.log("Notification triggered for event:", resolvedEventId);
 
     const io = req.app.get("io");
@@ -184,7 +181,7 @@ exports.rsvpToEvent = async (req, res) => {
 
 exports.getRSVPStatus = async (req, res) => {
   const { eventId, userId } = req.params;
-  if (isNaN(parseInt(eventId, 10)) || isNaN(parseInt(userId, 10))) {
+  if (isNaN(parseInt(userId, 10))) {
     return res.status(400).json({ error: "Invalid ID" });
   }
 

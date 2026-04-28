@@ -1,4 +1,4 @@
-const pool = require("../db");
+const pool = require("../config/db");
 
 exports.getAllEvents = async (req, res) => {
   try {
