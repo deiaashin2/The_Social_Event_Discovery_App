@@ -25,6 +25,12 @@ export function getSocket(): Socket {
       }
     });
 
+    socket.on("notification", (data) => {
+      console.log("NOTIFICATION RECEIVED:", data);
+
+      alert(`${data.title}: ${data.body}`);
+  });
+
     socket.on("disconnect", () => {
       console.warn("Disconnected from server");
     });

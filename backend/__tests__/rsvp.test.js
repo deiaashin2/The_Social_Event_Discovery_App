@@ -1,17 +1,17 @@
 const request = require("supertest");
 const express = require("express");
 
-jest.mock("../db", () => ({
+jest.mock("../config/db", () => ({
   connect: jest.fn(),
   query: jest.fn(),
 }));
 
-const pool = require("../db");
+const pool = require("../config/db");
 
 function buildAppWithAuthMock(authImpl) {
   jest.resetModules();
 
-  jest.doMock("../db", () => pool);
+  jest.doMock("../config/db", () => pool);
   jest.doMock("../middleware/auth", () => authImpl);
 
   const expressFresh = require("express");

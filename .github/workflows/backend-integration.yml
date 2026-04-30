@@ -55,14 +55,16 @@ jobs:
           PG_PASSWORD: mypassword
           PG_DATABASE: mydb
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret
+          JWT_SECRET: dev-secret-change-me
+          TICKETMASTER_API_KEY: test-key-not-used
         run: npm test -- --coverage --coverageReporters=text-summary
 
-deploy:
-  needs: integration-tests
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  runs-on: ubuntu-latest
-  steps:
-    - name: Deploy to Production
-      run: |
-        echo "All tests passed. Initiating deployment sequence..."
+  deploy:  
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo "All tests passed. Initiating deployment sequence..."

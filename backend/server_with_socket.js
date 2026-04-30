@@ -15,6 +15,8 @@ const io = new Server(httpServer, {
   },
 });
 
+app.set("io", io);
+
 // Minimal socket events to satisfy your test
 io.on("connection", (socket) => {
   socket.on("join_room", (roomId) => {

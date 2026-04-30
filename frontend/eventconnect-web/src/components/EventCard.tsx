@@ -58,10 +58,11 @@ export default function EventCard({ event }: EventCardProps) {
     formattedTime = event.time || "Time TBA";
   }
 
-  const eventId = event.event_id || event.ticketmaster_id || event.id;
+  //const eventId = event.event_id || event.ticketmaster_id || event.id;
+  const eventId = event.event_id;
 
   return (
-    <Link to={`/events/${eventId}`} className="group block">
+    <Link to={`/event/${eventId}`} className="group block">
       <div className="hover-lift overflow-hidden rounded-xl border border-border bg-card">
         <div className="relative aspect-[16/10] overflow-hidden">
           <img

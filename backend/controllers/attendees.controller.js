@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../db");
 
 exports.getEventAttendees = async (req, res) => {
   const { eventId } = req.params;

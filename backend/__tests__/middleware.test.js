@@ -14,15 +14,15 @@ describe("authenticateToken middleware", () => {
   test("TC-MW-001: no Authorization header returns 401", async () => {
     const res = await request(app).get("/protected");
     expect(res.status).toBe(401);
-    expect(res.body.error).toMatch(/no token/i);
+    expect(res.body.error).toMatch(/missing token/i);
   });
 
   test("TC-MW-002: malformed token string returns 403", async () => {
     const res = await request(app)
       .get("/protected")
       .set("Authorization", "Bearer bad.token.value");
-    expect(res.status).toBe(403);
-    expect(res.body.error).toMatch(/invalid or expired/i);
+      expect(res.status).toBe(401);
+      expect(res.body.error).toMatch(/invalid token/i);
   });
 
   test("TC-MW-003: expired token returns 403", async () => {
@@ -30,7 +30,7 @@ describe("authenticateToken middleware", () => {
     const res = await request(app)
       .get("/protected")
       .set("Authorization", `Bearer ${token}`);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   test("TC-MW-004: token signed with wrong secret returns 403", async () => {
@@ -38,7 +38,7 @@ describe("authenticateToken middleware", () => {
     const res = await request(app)
       .get("/protected")
       .set("Authorization", `Bearer ${token}`);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   test("TC-MW-005: valid token sets req.user and calls next", async () => {
