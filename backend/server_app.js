@@ -45,6 +45,11 @@ const ticketmasterRoutes = require("./routes/ticketmaster.routes");
 // route for ticketmaster
 app.use("/ticketmaster-events", ticketmasterRoutes);
 
+const notificationsRoutes = require("./routes/notifications.routes");
+
+// route for notifications
+app.use("/notifications", notificationsRoutes);
+
 
 // Health check
 app.get("/health", (req, res) => {

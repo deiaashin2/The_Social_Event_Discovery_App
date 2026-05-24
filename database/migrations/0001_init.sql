@@ -40,3 +40,13 @@ CREATE TABLE IF NOT EXISTS event_tags (
   tag_id     BIGINT NOT NULL REFERENCES tags(tag_id) ON DELETE CASCADE,
   PRIMARY KEY (event_id, tag_id)
 );
+
+CREATE TABLE IF NOT EXISTS notifications (
+  notification_id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  event_id BIGINT REFERENCES events(event_id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL DEFAULT 'nearby_event',
+  message TEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
